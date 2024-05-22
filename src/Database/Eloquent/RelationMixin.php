@@ -122,33 +122,48 @@ class RelationMixin
                 );
             };
 
-            return match (true) {
+            switch (true) {
                 // extended relation
-                $this instanceof HasOne => $hasOne($query, $parentQuery),
-                $this instanceof MorphOne => $morphOne($query, $parentQuery),
-                $this instanceof MorphOneOrMany => $morphOneOrMany($query, $parentQuery),
-                $this instanceof MorphToMany => $morphToMany($query, $parentQuery),
+                case $this instanceof HasOne:
+                    return $hasOne($query, $parentQuery);
+                case $this instanceof MorphOne:
+                    return $morphOne($query, $parentQuery);
+                case $this instanceof MorphOneOrMany:
+                    return $morphOneOrMany($query, $parentQuery);
+                case $this instanceof MorphToMany:
+                    return $morphToMany($query, $parentQuery);
                 // basic relation
-                $this instanceof BelongsTo => $belongsTo($query, $parentQuery),
-                $this instanceof BelongsToMany => $belongsToMany($query, $parentQuery),
-                $this instanceof HasOneOrMany => $hasOneOrMany($query, $parentQuery),
-                $this instanceof HasManyThrough => $hasManyThrough($query, $parentQuery),
-                default => throw new LogicException(
-                    sprintf('%s must be a relationship instance.', $this::class)
-                )
-            };
+                case $this instanceof BelongsTo:
+                    return $belongsTo($query, $parentQuery);
+                case $this instanceof BelongsToMany:
+                    return $belongsToMany($query, $parentQuery);
+                case $this instanceof HasOneOrMany:
+                    return $hasOneOrMany($query, $parentQuery);
+                case $this instanceof HasManyThrough:
+                    return $hasManyThrough($query, $parentQuery);
+                default:
+                    throw new LogicException(
+                        sprintf('%s must be a relationship instance.', get_class($this))
+                    );
+            }
         };
     }
 
     public function getRelationWhereInKey(): Closure
     {
-        return fn (): string => match (true) {
-            $this instanceof BelongsTo => $this->getQualifiedForeignKeyName(),
-            $this instanceof HasOneOrMany, $this instanceof BelongsToMany => $this->getQualifiedParentKeyName(),
-            $this instanceof HasManyThrough => $this->getQualifiedLocalKeyName(),
-            default => throw new LogicException(
-                sprintf('%s must be a relationship instance.', $this::class)
-            )
+        return function (): string {
+            switch (true) {
+                case $this instanceof BelongsTo:
+                    return $this->getQualifiedForeignKeyName();
+                case $this instanceof HasOneOrMany || $this instanceof BelongsToMany:
+                    return $this->getQualifiedParentKeyName();
+                case $this instanceof HasManyThrough:
+                    return $this->getQualifiedLocalKeyName();
+                default:
+                    throw new LogicException(
+                        sprintf('%s must be a relationship instance.', get_class($this))
+                    );
+            }
         };
     }
 }
